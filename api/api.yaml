@@ -1,0 +1,234 @@
+openapi: 3.0.3
+info:
+  title: Foodiee API Documentation
+  description: |-
+    API specification for the Foodiee App
+  contact:
+    email: mail@alexander-aust.de
+  license:
+    name: GNU Affero General Public License
+    url: https://www.gnu.org/licenses/agpl-3.0.txt
+  version: 1.0.0
+tags:
+  - name: recipes
+    description: Everything about recipes
+  - name: shopping-list
+    description: Everything about the users shopping list
+  - name: users
+    description: Everything about the users
+paths:
+  # =============
+  # RECIPES
+  # =============
+  /recipes:
+    get:
+      tags:
+        - recipes
+      summary: Get all recipes
+      description: Get all recipes
+      responses:
+        '200':
+          description: Returns all recipes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeList'
+        '401':
+          description: User is not authenticated.
+    post:
+      tags:
+        - recipes
+      summary: Create a recipe
+      description: Create a recipe by the given values
+      requestBody:
+        description: The recipe which should be created 
+        content: 
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Recipe'
+      responses: 
+        '200':
+          description: Returns the newly created recipe.
+          content: 
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recipe'
+        '400':
+          description: Issue with your Request.
+        '401':
+          description: User is not authenticated.
+  /recipes/{id}:
+    get:
+      tags:
+        - recipes
+      summary: Get recipe by id
+      description: Get a recipe by an specified id.
+      parameters: 
+        - name: id
+          in: path
+          description: ID parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Returns a recipe by the id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseRecipe'
+        '401':
+          description: User is not authenticated.
+# =============
+# SHOPPING LIST
+# =============
+  /shopping-list/{user-id}:
+    get:
+      tags:
+        - shopping-list
+      summary: Returns the shopping list
+      description: Returns the shopping list of the specified user.
+      parameters: 
+        - name: user-id
+          in: path
+          description: ID parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Returns the shopping list.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingList'
+        '401':
+          description: User is not authenticated.
+    put:
+      tags:
+        - shopping-list
+      summary: Adds an item to the shopping list
+      description: Adds an item to the shopping list of the specified user
+      parameters: 
+        - name: user-id
+          in: path
+          description: ID parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Returns the updated shopping list.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingList'
+        '401':
+          description: User is not authenticated.
+    delete:
+      tags:
+        - shopping-list
+      summary: Deletes all items from the shopping list.
+      parameters: 
+        - name: user-id
+          in: path
+          description: ID parameter
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: All items were deleted.
+        '401':
+          description: User is not authenticated.
+# =============
+# USERS
+# =============
+  /users:
+    get:
+      tags:
+        - users
+      summary: Returns all users
+      responses:
+        '200':
+          description: Returns all users on this foodiee instance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserList'
+        '401':
+          description: User is not authenticated.
+# =================================
+# COMPONENTS
+# =================================
+components:
+  schemas:
+    ResponseWrapper:
+      type: object
+      properties:
+        id:
+          type: string
+    Ingredient:
+      type: object
+      properties:
+        name:
+          type: string
+        unit:
+          type: string
+        amount:
+          type: integer
+    ResponseIngredient:
+      allOf: 
+        - $ref: '#/components/schemas/ResponseWrapper'
+        - $ref: '#/components/schemas/Ingredient'
+    Recipe:
+      type: object
+      properties:
+        name:
+          type: string
+        author:
+          type: string
+        thumbnail:
+          type: string
+        preperationTime:
+          type: integer
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResponseIngredient'
+        preperation:
+          type: string
+    ResponseRecipe:
+      allOf: 
+        - $ref: '#/components/schemas/ResponseWrapper'
+        - $ref: '#/components/schemas/Recipe'
+    RecipeList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResponseRecipe'
+    ShoppingList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ingredient'
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        picture:
+          type: string
+    UserList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
