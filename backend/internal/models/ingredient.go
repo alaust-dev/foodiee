@@ -1,6 +1,6 @@
 package models
 
-type ApiIngredient struct {
+type Ingredient struct {
 	Id      string
 	Name    string
 	Unit    string

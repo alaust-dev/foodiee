@@ -1,5 +1,5 @@
 package models
 
-type ApiListWrapper struct {
+type ListWrapper struct {
 	Data any `json:"data"`
 }

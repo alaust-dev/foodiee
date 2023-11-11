@@ -3,15 +3,15 @@ package main
 import (
 	"log"
 
-	"github.com/alaust/foodiee/api/internal/api"
-	"github.com/alaust/foodiee/api/internal/database"
-	"github.com/alaust/foodiee/api/internal/resources"
+	"github.com/alaust/foodiee/backend/api"
+	"github.com/alaust/foodiee/backend/internal/database"
+	"github.com/alaust/foodiee/backend/internal/resources"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 	router := gin.Default()
-	db := database.NewDatabase("/home/alaust/Development/alaust/foodiee/api/foodiee.db")
+	db := database.NewDatabase("/home/alaust/Development/alaust/foodiee/backend/foodiee.db")
 
 	server := &resources.Server{
 		DB: *db,

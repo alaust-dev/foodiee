@@ -1,7 +1,7 @@
 package models
 
 type Recipe struct {
-	Id              int
+	Id              string
 	Name            string
 	Author          string
 	Thumbnail       string

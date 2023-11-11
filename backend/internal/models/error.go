@@ -1,5 +1,5 @@
 package models
 
-type ApiError struct {
+type Error struct {
 	Msg string `json:"msg"`
 }

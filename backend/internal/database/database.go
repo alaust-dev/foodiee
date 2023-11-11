@@ -5,7 +5,7 @@ import (
 	"log"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/alaust/foodiee/api/internal/models"
+	"github.com/alaust/foodiee/backend/internal/models"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -42,7 +42,7 @@ func (d *Database) GetUsers() ([]models.User, error) {
 	return users, nil
 }
 
-func (d *Database) GetRecipes() ([]models.Recipe, error) {
+/*func (d *Database) GetRecipes() ([]models.Recipe, error) {
 	rows, err := squirrel.Select("*").From("recipe").RunWith(d.db).Query()
 	if err != nil {
 		return []models.Recipe{}, err
@@ -85,4 +85,4 @@ func (d *Database) getIngredientsOfRecipe(recipeId int) ([]models.Ingredient, er
 		ingredients = append(ingredients, ingredient)
 	}
 	return ingredients, nil
-}
+}*/
