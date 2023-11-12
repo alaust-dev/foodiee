@@ -1,7 +1,7 @@
-package models
+package entities
 
 type Ingredient struct {
-	Id      string
+	Id      int
 	Name    string
 	Unit    string
 	Ammount int

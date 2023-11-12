@@ -11,7 +11,8 @@ import (
 
 func main() {
 	router := gin.Default()
-	db := database.NewDatabase("/home/alaust/Development/alaust/foodiee/backend/foodiee.db")
+	path := "/home/alaust/Development/alaust/foodiee/backend/foodiee.db"
+	db := database.CreateNew(&path)
 
 	server := &resources.Server{
 		DB: *db,

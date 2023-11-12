@@ -1,11 +1,10 @@
-package models
+package entities
 
 type Recipe struct {
-	Id              string
+	Id              int64
 	Name            string
-	Author          string
+	Author          int
 	Thumbnail       string
 	PreperationTime int
-	Ingredients     []Ingredient
 	Preperation     string
 }
