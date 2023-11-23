@@ -22,15 +22,6 @@ type ServerInterface interface {
 	// Get recipe by id
 	// (GET /recipes/{id})
 	GetRecipesId(c *gin.Context, id string)
-	// Deletes all items from the shopping list.
-	// (DELETE /shopping-list/{user-id})
-	DeleteShoppingListUserId(c *gin.Context, userId string)
-	// Returns the shopping list
-	// (GET /shopping-list/{user-id})
-	GetShoppingListUserId(c *gin.Context, userId string)
-	// Adds an item to the shopping list
-	// (PUT /shopping-list/{user-id})
-	PutShoppingListUserId(c *gin.Context, userId string)
 	// Returns all users
 	// (GET /users)
 	GetUsers(c *gin.Context)
@@ -95,78 +86,6 @@ func (siw *ServerInterfaceWrapper) GetRecipesId(c *gin.Context) {
 	siw.Handler.GetRecipesId(c, id)
 }
 
-// DeleteShoppingListUserId operation middleware
-func (siw *ServerInterfaceWrapper) DeleteShoppingListUserId(c *gin.Context) {
-
-	var err error
-
-	// ------------- Path parameter "user-id" -------------
-	var userId string
-
-	err = runtime.BindStyledParameter("simple", false, "user-id", c.Param("user-id"), &userId)
-	if err != nil {
-		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter user-id: %s", err), http.StatusBadRequest)
-		return
-	}
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-		if c.IsAborted() {
-			return
-		}
-	}
-
-	siw.Handler.DeleteShoppingListUserId(c, userId)
-}
-
-// GetShoppingListUserId operation middleware
-func (siw *ServerInterfaceWrapper) GetShoppingListUserId(c *gin.Context) {
-
-	var err error
-
-	// ------------- Path parameter "user-id" -------------
-	var userId string
-
-	err = runtime.BindStyledParameter("simple", false, "user-id", c.Param("user-id"), &userId)
-	if err != nil {
-		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter user-id: %s", err), http.StatusBadRequest)
-		return
-	}
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-		if c.IsAborted() {
-			return
-		}
-	}
-
-	siw.Handler.GetShoppingListUserId(c, userId)
-}
-
-// PutShoppingListUserId operation middleware
-func (siw *ServerInterfaceWrapper) PutShoppingListUserId(c *gin.Context) {
-
-	var err error
-
-	// ------------- Path parameter "user-id" -------------
-	var userId string
-
-	err = runtime.BindStyledParameter("simple", false, "user-id", c.Param("user-id"), &userId)
-	if err != nil {
-		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter user-id: %s", err), http.StatusBadRequest)
-		return
-	}
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		middleware(c)
-		if c.IsAborted() {
-			return
-		}
-	}
-
-	siw.Handler.PutShoppingListUserId(c, userId)
-}
-
 // GetUsers operation middleware
 func (siw *ServerInterfaceWrapper) GetUsers(c *gin.Context) {
 
@@ -210,8 +129,5 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.GET(options.BaseURL+"/recipes", wrapper.GetRecipes)
 	router.POST(options.BaseURL+"/recipes", wrapper.PostRecipes)
 	router.GET(options.BaseURL+"/recipes/:id", wrapper.GetRecipesId)
-	router.DELETE(options.BaseURL+"/shopping-list/:user-id", wrapper.DeleteShoppingListUserId)
-	router.GET(options.BaseURL+"/shopping-list/:user-id", wrapper.GetShoppingListUserId)
-	router.PUT(options.BaseURL+"/shopping-list/:user-id", wrapper.PutShoppingListUserId)
 	router.GET(options.BaseURL+"/users", wrapper.GetUsers)
 }

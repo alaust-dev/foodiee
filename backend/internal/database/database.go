@@ -2,7 +2,9 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"log"
+	"strings"
 
 	"github.com/Masterminds/squirrel"
 	"github.com/alaust/foodiee/backend/internal/entities"
@@ -24,7 +26,6 @@ func CreateNew(path *string) *Database {
 
 func (d *Database) GetUsers() ([]entities.User, error) {
 	rows, err := squirrel.Select("*").From("user").RunWith(d.db).Query()
-
 	if err != nil {
 		return []entities.User{}, err
 	}
@@ -51,7 +52,12 @@ func (d *Database) GetRecipes() ([]entities.Recipe, error) {
 	var recipes []entities.Recipe
 	for rows.Next() {
 		recipe := entities.Recipe{}
-		err := rows.Scan(&recipe.Id, &recipe.Author, &recipe.Name, &recipe.Thumbnail, &recipe.PreperationTime, &recipe.Preperation)
+		err := rows.Scan(&recipe.Id,
+			&recipe.Author,
+			&recipe.Name,
+			&recipe.Thumbnail,
+			&recipe.PreperationTime,
+			&recipe.Preperation)
 		if err != nil {
 			return []entities.Recipe{}, err
 		}
@@ -60,28 +66,47 @@ func (d *Database) GetRecipes() ([]entities.Recipe, error) {
 	return recipes, nil
 }
 
+func (d *Database) GetRecipe(id int64) (*entities.Recipe, error) {
+	var recipe entities.Recipe
+	err := squirrel.Select("*").
+		From("recipe").
+		Where(squirrel.Eq{"id": id}).
+		RunWith(d.db).QueryRow().
+		Scan(&recipe.Id,
+			&recipe.Author,
+			&recipe.Name,
+			&recipe.Thumbnail,
+			&recipe.PreperationTime,
+			&recipe.Preperation)
+	if err != nil {
+		return &entities.Recipe{}, err
+	}
+
+	return &recipe, nil
+}
+
 func (d *Database) CreateRecipe(r *entities.Recipe) (int64, error) {
 	result, err := squirrel.Insert("recipe").
 		Columns("author", "name", "thumbnail", "preperation_time", "preperation").
 		Values(r.Author, r.Name, r.Thumbnail, r.PreperationTime, r.Preperation).
 		RunWith(d.db).Exec()
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
+
 	id, err := result.LastInsertId()
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
+
 	return id, nil
 }
 func (d *Database) GetIngredientsOfRecipe(recipeId *int64) ([]entities.Ingredient, error) {
-
 	ir, err := squirrel.Select("ingredient_id, i.name, i.unit, amount").
 		From("recipe_ingredient").
 		Join("ingredient i on i.id = recipe_ingredient.ingredient_id").
 		Where(squirrel.Eq{"recipe_id": recipeId}).
 		RunWith(d.db).Query()
-
 	if err != nil {
 		return []entities.Ingredient{}, err
 	}
@@ -90,37 +115,41 @@ func (d *Database) GetIngredientsOfRecipe(recipeId *int64) ([]entities.Ingredien
 	for ir.Next() {
 		ingredient := entities.Ingredient{}
 		err := ir.Scan(&ingredient.Id, &ingredient.Name, &ingredient.Unit, &ingredient.Ammount)
+
 		if err != nil {
 			return []entities.Ingredient{}, err
 		}
+
 		ingredients = append(ingredients, ingredient)
 	}
+
 	return ingredients, nil
 }
 
 func (d *Database) CreateIngredientsForRecipe(recipeId *int64, ing []entities.Ingredient) error {
 	for _, i := range ing {
-		var count int
-		r, err := squirrel.Select("COUNT(*)").From("ingredient").Where(squirrel.Eq{"id": recipeId}).RunWith(d.db).Query()
-		if err != nil {
-			return err
-		}
-
-		r.Scan(&count)
-		if count == 0 {
-			_, err = squirrel.Insert("ingredient").
+		var id int64
+		err := squirrel.Select("id").
+			From("ingredient").
+			Where(squirrel.Eq{"name": strings.ToLower(i.Name)}).
+			RunWith(d.db).QueryRow().Scan(&id)
+		if errors.Is(err, sql.ErrNoRows) {
+			r, err := squirrel.Insert("ingredient").
 				Columns("name", "unit").
-				Values(i.Name, i.Unit).
+				Values(strings.ToLower(i.Name), i.Unit).
 				RunWith(d.db).Exec()
 			if err != nil {
 				return err
 			}
 
+			id, _ = r.LastInsertId()
+		} else if err != nil {
+			return err
 		}
 
 		_, err = squirrel.Insert("recipe_ingredient").
 			Columns("recipe_id", "ingredient_id", "amount").
-			Values(*recipeId, i.Id, i.Ammount).
+			Values(*recipeId, id, i.Ammount).
 			RunWith(d.db).Exec()
 	}
 	return nil

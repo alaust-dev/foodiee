@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/alaust/foodiee/backend/api"
 	"github.com/alaust/foodiee/backend/internal/database"
@@ -11,7 +12,7 @@ import (
 
 func main() {
 	router := gin.Default()
-	path := "/home/alaust/Development/alaust/foodiee/backend/foodiee.db"
+	path := os.Getenv("DB_FILE_PATH")
 	db := database.CreateNew(&path)
 
 	server := &resources.Server{

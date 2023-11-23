@@ -1,6 +1,8 @@
 package resources
 
 import (
+	"database/sql"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -21,14 +23,12 @@ func (s *Server) GetRecipes(c *gin.Context) {
 
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, &dto.Error{Msg: err.Error()})
-		return
 	}
 
 	for _, r := range recipes {
 		ings, err := s.DB.GetIngredientsOfRecipe(&r.Id)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, &dto.Error{Msg: err.Error()})
-			return
 		}
 		result = append(result, *dto.ToRecipeResponse(&r, &ings))
 	}
@@ -38,14 +38,12 @@ func (s *Server) GetRecipes(c *gin.Context) {
 func (s *Server) PostRecipes(c *gin.Context) {
 	var recipe dto.RecipePost
 	if err := c.ShouldBindJSON(&recipe); err != nil {
-		c.JSON(http.StatusInternalServerError, &dto.Error{Msg: err.Error()})
-		return
+		c.JSON(http.StatusBadRequest, &dto.Error{Msg: err.Error()})
 	}
 
 	a_id, err := strconv.Atoi(strings.TrimPrefix(recipe.Author, "u_"))
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, &dto.Error{Msg: err.Error()})
-		return
 	}
 	r_id, err := s.DB.CreateRecipe(&entities.Recipe{
 		Author:          a_id,
@@ -65,23 +63,50 @@ func (s *Server) PostRecipes(c *gin.Context) {
 			Ammount: i.Amount,
 		})
 	}
-	s.DB.CreateIngredientsForRecipe(&r_id, ings)
+	err = s.DB.CreateIngredientsForRecipe(&r_id, ings)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, &dto.Error{Msg: err.Error()})
+	}
+
+	r_result, err := s.DB.GetRecipe(r_id)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, dto.Error{Msg: err.Error()})
+	}
+
+	ing_result, err := s.DB.GetIngredientsOfRecipe(&r_id)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, dto.Error{Msg: err.Error()})
+	}
+
+	c.AbortWithStatusJSON(http.StatusOK, dto.ToRecipeResponse(r_result, &ing_result))
 }
 
-func (s *Server) GetRecipesId(c *gin.Context, id string) {}
+func (s *Server) GetRecipesId(c *gin.Context, id string) {
+	r_id, err := strconv.Atoi(strings.TrimPrefix(id, "r_"))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, &dto.Error{Msg: err.Error()})
+	}
 
-func (s *Server) DeleteShoppingListUserId(c *gin.Context, userId string) {}
+	recipe, err := s.DB.GetRecipe(int64(r_id))
+	if errors.Is(err, sql.ErrNoRows) {
+		c.AbortWithStatusJSON(http.StatusNotFound, &dto.Error{Msg: err.Error()})
+	} else if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, &dto.Error{Msg: err.Error()})
+	}
 
-func (s *Server) GetShoppingListUserId(c *gin.Context, userId string) {}
+	ings, err := s.DB.GetIngredientsOfRecipe(&recipe.Id)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, &dto.Error{Msg: err.Error()})
+	}
 
-func (s *Server) PutShoppingListUserId(c *gin.Context, userId string) {}
+	c.JSON(http.StatusOK, dto.ToRecipeResponse(recipe, &ings))
+}
 
 func (s *Server) GetUsers(c *gin.Context) {
 	result := []dto.UserResponse{}
 	users, err := s.DB.GetUsers()
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, &dto.Error{Msg: err.Error()})
-		return
 	}
 
 	for _, u := range users {
