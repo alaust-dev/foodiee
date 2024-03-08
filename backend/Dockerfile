@@ -1,6 +1,6 @@
 FROM golang:alpine AS build
 
-RUN apk update && apk upgrade && apk add --no-cache gcc libc-dev
+RUN apk update && apk add --no-cache gcc libc-dev
 
 WORKDIR /app
 
@@ -8,9 +8,11 @@ COPY go.mod go.sum ./
 COPY api/ api/
 COPY cmd/ cmd/
 COPY internal/ internal/
+COPY swagger-ui/ swagger-ui/
+COPY docs/ docs/
 
+ENV CGO_CFLAGS="-D_LARGEFILE64_SOURCE=1"
 RUN CGO_ENABLED=1 go build -a -o foodiee-backend cmd/foodiee_backend/main.go
-
 
 
 FROM alpine:latest
